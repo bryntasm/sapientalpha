@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>sapient-build</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='sapistyles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>sapient-build</h1>
+        <p>All inclusive solution displaying character builds</p>
+        <p>Enter a Resonator and have AI output the necessary materials for ascensions</p>
+        <form id="character-form">
+            <input type="text" name="character_name" placeholder="Enter character name">
+            <button type="submit">Submit</button>
+        </form>
+        <div id="result"></div>
+    </div>
+    <script>
+        document.getElementById('character-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            fetch('/get_build', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                const resultDiv = document.getElementById('result');
+                if (data.error) {
+                    resultDiv.innerHTML = `<p>${data.error}</p>`;
+                } else {
+                    let resultHtml = '';
+
+                    // Define the desired order of categories
+                    const categoriesOrder = ['Ascension', 'Upgrades', 'Weapons', 'Teams'];
+
+                    categoriesOrder.forEach(category => {
+                        if (data[category]) {
+                            resultHtml += `<h2>${category}</h2><ul>`;
+                            data[category].forEach(item => {
+                                resultHtml += `<li>${item}</li>`;
+                            });
+                            resultHtml += '</ul>';
+                        }
+                    });
+
+                    resultDiv.innerHTML = resultHtml;
+
+                    // Scroll to top of results
+                    resultDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    </script>
+</body>
+</html>
